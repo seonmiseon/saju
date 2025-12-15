@@ -262,7 +262,7 @@ export const analyzeSaju = async (input: UserInput): Promise<SajuAnalysisResult>
   };
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await ai!.models.generateContent({
       model,
       contents: prompt,
       config: {
@@ -335,7 +335,7 @@ export const consultSaju = async (
   }
 
   try {
-    const chat = ai.chats.create({
+    const chat = ai!.chats.create({
       model,
       config: {
         systemInstruction: systemContext,
@@ -344,4 +344,9 @@ export const consultSaju = async (
     });
 
     const result = await chat.sendMessage({ message: question });
-    return result.text || "
+    return result.text || "답변을 생성하지 못했습니다.";
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
