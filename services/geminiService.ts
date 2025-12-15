@@ -3,7 +3,26 @@ import { SajuAnalysisResult, UserInput, Pillar } from "../types";
 // @ts-ignore
 import { Solar, Lunar } from "lunar-javascript";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+let ai: GoogleGenAI | null = null;
+
+export const setApiKey = (apiKey: string) => {
+  ai = new GoogleGenAI({ apiKey });
+  localStorage.setItem('gemini_api_key', apiKey);
+};
+
+export const getStoredApiKey = (): string | null => {
+  return localStorage.getItem('gemini_api_key');
+};
+
+export const isApiKeySet = (): boolean => {
+  return ai !== null;
+};
+
+// Initialize from localStorage if available
+const storedKey = typeof window !== 'undefined' ? localStorage.getItem('gemini_api_key') : null;
+if (storedKey) {
+  ai = new GoogleGenAI({ apiKey: storedKey });
+}
 
 // ---------------------------------------------------------------------------
 // 1. Static Data & Lookup Tables

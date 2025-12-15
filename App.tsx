@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { UserInput, SajuAnalysisResult, ChatMessage } from './types';
-import { analyzeSaju, consultSaju } from './services/geminiService';
+import { analyzeSaju, consultSaju, setApiKey, getStoredApiKey, isApiKeySet } from './services/geminiService';
 import PillarCard from './components/PillarCard';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -15,6 +15,19 @@ const App: React.FC = () => {
   const [sajuResult, setSajuResult] = useState<SajuAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  
+  // API Key State
+  const [apiKey, setApiKeyState] = useState('');
+  const [isApiKeySaved, setIsApiKeySaved] = useState(false);
+  
+  // Load stored API key on mount
+  useEffect(() => {
+    const storedKey = getStoredApiKey();
+    if (storedKey) {
+      setApiKeyState(storedKey);
+      setIsApiKeySaved(true);
+    }
+  }, []);
   
   // Chat State
   const [chatInput, setChatInput] = useState('');
@@ -31,6 +44,11 @@ const App: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.birthDate || !input.birthTime || !input.name) return;
+    
+    if (!isApiKeySaved || !apiKey.trim()) {
+      alert("Gemini API 키를 먼저 입력하고 저장해주세요.");
+      return;
+    }
 
     setIsAnalyzing(true);
     if (window.innerWidth < 768) setShowSidebar(false); // Auto close sidebar on mobile
@@ -106,12 +124,49 @@ const App: React.FC = () => {
         overflow-y-auto
       `}>
         <div className="p-6">
-          <div className="flex items-center space-x-2 mb-8">
+          <div className="flex items-center space-x-2 mb-6">
             <span className="text-3xl">📜</span>
             <div>
               <h1 className="font-serif font-bold text-xl leading-none">천기누설</h1>
               <p className="text-xs text-gray-500 mt-1">정통 사주 · 풍수 감정원</p>
             </div>
+          </div>
+
+          {/* API Key Input */}
+          <div className="mb-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-sm">🔑</span>
+              <label className="text-xs font-bold text-gray-600">Gemini API Key</label>
+            </div>
+            <div className="flex space-x-2">
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => {
+                  setApiKeyState(e.target.value);
+                  setIsApiKeySaved(false);
+                }}
+                className="flex-1 px-3 py-2 text-sm bg-white border border-gray-200 rounded-md focus:border-oriental-gold outline-none transition-colors"
+                placeholder="API 키를 입력하세요"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (apiKey.trim()) {
+                    setApiKey(apiKey.trim());
+                    setIsApiKeySaved(true);
+                  }
+                }}
+                className="px-3 py-2 bg-red-700 text-white text-sm font-medium rounded-md hover:bg-red-800 transition-colors"
+              >
+                저장
+              </button>
+            </div>
+            {isApiKeySaved && (
+              <p className="text-xs text-green-600 mt-1.5 flex items-center">
+                <span className="mr-1">✓</span> 저장됨
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
