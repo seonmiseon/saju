@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>천기누설 : 운명 감정원</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700;900&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              serif: ['"Noto Serif KR"', 'serif'],
+              sans: ['"Noto Sans KR"', 'sans-serif'],
+            },
+            colors: {
+              'oriental-red': '#B93632',
+              'oriental-gold': '#C5A059',
+              'oriental-black': '#1A1A1A',
+              'oriental-paper': '#F7F5F0',
+              'oriental-gray': '#EAE7DE',
+              'wood': '#4A7c59',
+              'fire': '#D9534F',
+              'earth': '#Eebb4d',
+              'metal': '#Aaaaaa',
+              'water': '#292b2c',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        background-color: #F7F5F0;
+        color: #1A1A1A;
+      }
+      /* Custom scrollbar for chat */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+      .paper-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(197, 160, 89, 0.1);
+      }
+      /* Print specific styles */
+      @media print {
+        .no-print { display: none !important; }
+      }
+      .editable-area:focus {
+        outline: 2px dashed #C5A059;
+        background-color: rgba(197, 160, 89, 0.05);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "lunar-javascript": "https://esm.sh/lunar-javascript@1.6.13",
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "jspdf": "https://esm.sh/jspdf@2.5.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
