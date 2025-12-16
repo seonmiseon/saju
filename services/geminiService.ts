@@ -250,7 +250,7 @@ function calculateWolun(birthYear: number): WolunEntry[] {
   
   for (let currentYear = startYear; currentYear <= endYear; currentYear++) {
     for (let monthNum = 1; monthNum <= 12; monthNum++) {
-      // 기준점(2024년 1월)으로부터 몇 개월 차이인지 계산
+      // 기준점(2025년 12월)으로부터 몇 개월 차이인지 계산
       const monthDiff = (currentYear - baseYear) * 12 + (monthNum - baseMonth);
       
       // 60갑자 인덱스 계산 (연속 순환)
