@@ -231,10 +231,18 @@ function calculateSaeun(birthYear: number): SaeunEntry[] {
 }
 
 // 월운 계산 함수
-// 양력 기준: 1월=축월(丑), 2월=인월(寅), 3월=묘월(卯), ... 12월=자월(子)
-// 년상기월법 기반 월간 계산
+// 60갑자가 연속으로 순환 (매월 +1씩 진행)
+// 기준점: 2024년 1월 = 丙寅(병인) = 60갑자 인덱스 2
 function calculateWolun(birthYear: number): WolunEntry[] {
   const wolunList: WolunEntry[] = [];
+  
+  // 60갑자 순서: 갑자(0), 을축(1), 병인(2), 정묘(3), 무진(4), 기사(5), 경오(6), 신미(7), 임신(8), 계유(9),
+  //             갑술(10), 을해(11), 병자(12), 정축(13), 무인(14), ...
+  // 기준점: 2024년 1월 = 丙寅(병인) = 인덱스 2
+  
+  const baseYear = 2024;
+  const baseMonth = 1;
+  const baseGanZhiIdx = 2; // 병인(丙寅)의 60갑자 인덱스
   
   // 현재년도 기준 앞뒤 여유있게 계산
   const startYear = birthYear - 10;
@@ -242,34 +250,22 @@ function calculateWolun(birthYear: number): WolunEntry[] {
   
   for (let currentYear = startYear; currentYear <= endYear; currentYear++) {
     for (let monthNum = 1; monthNum <= 12; monthNum++) {
-      // 해당 연도의 천간 구하기 (1984년 = 갑자년 기준)
-      const yearGanZhiIdx = ((currentYear - 1984) % 60 + 60) % 60;
-      const yearGan = GAN[yearGanZhiIdx % 10];
-      const yearGanIdx = GAN.indexOf(yearGan);
+      // 기준점(2024년 1월)으로부터 몇 개월 차이인지 계산
+      const monthDiff = (currentYear - baseYear) * 12 + (monthNum - baseMonth);
       
-      // 년상기월법: 인월(2월)의 천간 결정
-      // 갑기년(0,5) -> 병인, 을경년(1,6) -> 무인, 병신년(2,7) -> 경인
-      // 정임년(3,8) -> 임인, 무계년(4,9) -> 갑인
-      const inMonthStemTable = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0];
-      const inMonthStemIdx = inMonthStemTable[yearGanIdx]; // 2월(인월) 천간 인덱스
+      // 60갑자 인덱스 계산 (연속 순환)
+      const ganZhiIdx = ((baseGanZhiIdx + monthDiff) % 60 + 60) % 60;
       
-      // 양력 기준 월 지지: 1월=丑(1), 2월=寅(2), 3월=卯(3), ... 12월=子(0)
-      // ZHI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
-      const monthBranchIdx = monthNum % 12; // 1월->1(丑), 2월->2(寅), ... 12월->0(子)
-      const monthBranch = ZHI[monthBranchIdx];
-      
-      // 월간 계산: 2월(인월)부터 천간이 시작, 1월(축월)은 인월보다 1 작음
-      // monthNum=1(축월)이면 인월천간-1, monthNum=2(인월)이면 인월천간, monthNum=3(묘월)이면 인월천간+1...
-      const monthStemIdx = ((inMonthStemIdx + (monthNum - 2)) % 10 + 10) % 10;
-      const monthStem = GAN[monthStemIdx];
+      const stem = GAN[ganZhiIdx % 10];
+      const branch = ZHI[ganZhiIdx % 12];
       
       wolunList.push({
         year: currentYear,
         month: monthNum,
-        stem: monthStem,
-        branch: monthBranch,
-        stemKorean: getKoreanChar(monthStem),
-        branchKorean: getKoreanChar(monthBranch)
+        stem: stem,
+        branch: branch,
+        stemKorean: getKoreanChar(stem),
+        branchKorean: getKoreanChar(branch)
       });
     }
   }
