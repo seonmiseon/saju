@@ -232,17 +232,17 @@ function calculateSaeun(birthYear: number): SaeunEntry[] {
 
 // 월운 계산 함수
 // 60갑자가 연속으로 순환 (매월 +1씩 진행)
-// 기준점: 2024년 1월 = 丙寅(병인) = 60갑자 인덱스 2
+// 기준점: 2025년 12월 = 丙子(병자) = 60갑자 인덱스 12
 function calculateWolun(birthYear: number): WolunEntry[] {
   const wolunList: WolunEntry[] = [];
   
   // 60갑자 순서: 갑자(0), 을축(1), 병인(2), 정묘(3), 무진(4), 기사(5), 경오(6), 신미(7), 임신(8), 계유(9),
   //             갑술(10), 을해(11), 병자(12), 정축(13), 무인(14), ...
-  // 기준점: 2024년 1월 = 丙寅(병인) = 인덱스 2
+  // 기준점: 2025년 12월 = 丙子(병자) = 인덱스 12
   
-  const baseYear = 2024;
-  const baseMonth = 1;
-  const baseGanZhiIdx = 2; // 병인(丙寅)의 60갑자 인덱스
+  const baseYear = 2025;
+  const baseMonth = 12;
+  const baseGanZhiIdx = 12; // 병자(丙子)의 60갑자 인덱스
   
   // 현재년도 기준 앞뒤 여유있게 계산
   const startYear = birthYear - 10;
