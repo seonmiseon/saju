@@ -669,17 +669,19 @@ ${sajuResult.fortune2026.health}
                 <div className="bg-white p-4 rounded-lg text-center shadow-sm">
                   <span className="block text-2xl mb-1">🎨</span>
                   <div className="text-xs text-gray-500 font-bold mb-1">행운의 색</div>
-                  <div className="font-serif font-bold text-lg">{sajuResult.chaeumAdvice.color}</div>
+                  <div className="font-serif font-bold text-sm text-gray-800">{sajuResult.chaeumAdvice.color}</div>
                 </div>
                 <div className="bg-white p-4 rounded-lg text-center shadow-sm">
                   <span className="block text-2xl mb-1">🧭</span>
                   <div className="text-xs text-gray-500 font-bold mb-1">대박 방위</div>
-                  <div className="font-serif font-bold text-lg">{sajuResult.chaeumAdvice.direction}</div>
+                  <div className="font-serif font-bold text-sm text-gray-800">{sajuResult.chaeumAdvice.direction}</div>
                 </div>
-                <div className="bg-white p-4 rounded-lg text-center shadow-sm">
-                  <span className="block text-2xl mb-1">🏺</span>
-                  <div className="text-xs text-gray-500 font-bold mb-1">개운 아이템</div>
-                  <div className="font-serif font-bold text-lg">{sajuResult.chaeumAdvice.items}</div>
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="text-center">
+                    <span className="block text-2xl mb-1">🏺</span>
+                    <div className="text-xs text-gray-500 font-bold mb-1">개운 아이템</div>
+                  </div>
+                  <div className="font-serif text-sm text-gray-800 leading-relaxed text-left whitespace-pre-line">{sajuResult.chaeumAdvice.items}</div>
                 </div>
               </div>
             </section>
