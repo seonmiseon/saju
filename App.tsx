@@ -585,41 +585,38 @@ ${sajuResult.fortune2026.health}
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
-                  {/* 현재 연도 기준 5년치만 기본 표시 */}
+                  {/* 현재 연도의 월운만 표시 - 오른쪽이 1월, 왼쪽이 12월 */}
                   {(() => {
                     const currentYear = new Date().getFullYear();
                     const currentMonth = new Date().getMonth() + 1;
-                    const displayYears = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2, currentYear + 3];
+                    const yearWolun = sajuResult.wolun.filter(w => w.year === currentYear);
                     
-                    return displayYears.map(displayYear => {
-                      const yearWolun = sajuResult.wolun.filter(w => w.year === displayYear);
-                      if (yearWolun.length === 0) return null;
-                      
-                      return (
-                        <div key={displayYear} className="mb-4">
-                          <div className="text-sm font-bold text-gray-700 mb-2">{displayYear}년</div>
-                          {/* 1월이 왼쪽, 12월이 오른쪽 */}
-                          <div className="flex space-x-1">
-                            {yearWolun.map((w, idx) => {
-                              const isCurrentMonth = w.year === currentYear && w.month === currentMonth;
-                              return (
-                                <div 
-                                  key={idx}
-                                  className={`flex flex-col items-center min-w-[45px] p-1 rounded border ${
-                                    isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
-                                  }`}
-                                >
-                                  <span className="text-[10px] text-gray-400">{w.month}월</span>
-                                  <span className="text-base font-bold text-red-600">{w.stem}</span>
-                                  <span className="text-base font-bold text-blue-600">{w.branch}</span>
-                                  <span className="text-[9px] text-gray-500">{w.stemKorean}{w.branchKorean}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
+                    // 12월부터 1월 순서로 (오른쪽→왼쪽 시간 흐름)
+                    const reversedWolun = [...yearWolun].reverse();
+                    
+                    return (
+                      <div>
+                        <div className="text-sm font-bold text-gray-700 mb-2">{currentYear}년 ({currentYear - sajuResult.birthYear + 1}세) 월운</div>
+                        <div className="flex space-x-1">
+                          {reversedWolun.map((w, idx) => {
+                            const isCurrentMonth = w.month === currentMonth;
+                            return (
+                              <div 
+                                key={idx}
+                                className={`flex flex-col items-center min-w-[45px] p-1.5 rounded border ${
+                                  isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
+                                }`}
+                              >
+                                <span className="text-base font-bold text-red-600">{w.stem}</span>
+                                <span className="text-base font-bold text-blue-600">{w.branch}</span>
+                                <span className="text-[10px] text-gray-500">{w.stemKorean}{w.branchKorean}</span>
+                                <span className="text-[10px] text-gray-400">{w.month}</span>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    });
+                      </div>
+                    );
                   })()}
                 </div>
               </div>
