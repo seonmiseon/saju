@@ -513,7 +513,7 @@ ${sajuResult.fortune2026.health}
             <section className="mt-8">
               <h3 className="text-xl font-serif font-bold mb-4 flex items-center">
                 <span className="w-1 h-6 bg-purple-600 mr-2"></span>
-                대운 (大運) - 10년 주기 운세
+                대운 (大運) <span className="text-sm font-normal text-gray-500 ml-2">큰 운, 10년 주기 운세</span>
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
@@ -546,7 +546,7 @@ ${sajuResult.fortune2026.health}
             <section className="mt-8">
               <h3 className="text-xl font-serif font-bold mb-4 flex items-center">
                 <span className="w-1 h-6 bg-green-600 mr-2"></span>
-                세운 (歲運) - 연도별 운세
+                세운 (歲運) <span className="text-sm font-normal text-gray-500 ml-2">해의 운, 연도별 운세</span>
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
@@ -564,6 +564,7 @@ ${sajuResult.fortune2026.health}
                           <span className="text-[10px] text-gray-400">{s.year}</span>
                           <span className="text-sm font-bold text-red-700">{s.stem}</span>
                           <span className="text-sm font-bold text-blue-700">{s.branch}</span>
+                          <span className="text-[10px] text-gray-500">{s.stemKorean}{s.branchKorean}</span>
                           <span className="text-[10px] text-gray-400">{s.age}세</span>
                         </div>
                       );
@@ -578,7 +579,7 @@ ${sajuResult.fortune2026.health}
             <section className="mt-8">
               <h3 className="text-xl font-serif font-bold mb-4 flex items-center">
                 <span className="w-1 h-6 bg-blue-600 mr-2"></span>
-                월운 (月運) - 월별 운세 (60갑자)
+                월운 (月運) <span className="text-sm font-normal text-gray-500 ml-2">달의 운, 월별 운세</span>
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
