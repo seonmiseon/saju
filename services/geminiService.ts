@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
-import { SajuAnalysisResult, UserInput, Pillar } from "../types";
+import { SajuAnalysisResult, UserInput, Pillar, DaeunEntry, SaeunEntry, WolunEntry } from "../types";
 // @ts-ignore
 import { Solar, Lunar } from "lunar-javascript";
 
@@ -105,6 +105,157 @@ function getTenGod(dayStem: string, target: string): string {
   if (dayIdx === -1 || targetIdx === -1) return "";
   
   return TEN_GODS_MAP[dayIdx][targetIdx];
+}
+
+// 60갑자 인덱스 계산
+function getGanZhiIndex(stem: string, branch: string): number {
+  const ganIdx = GAN.indexOf(stem);
+  const zhiIdx = ZHI.indexOf(branch);
+  // 60갑자 인덱스 = (천간인덱스 * 12 + 지지인덱스) % 60 이 아니라
+  // 갑자=0, 을축=1, ... 계해=59
+  // 천간과 지지가 같은 음양일 때만 조합 가능
+  for (let i = 0; i < 60; i++) {
+    if (GAN[i % 10] === stem && ZHI[i % 12] === branch) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+// 60갑자에서 천간/지지 가져오기
+function getGanZhiFromIndex(index: number): { stem: string; branch: string } {
+  const normalizedIndex = ((index % 60) + 60) % 60;
+  return {
+    stem: GAN[normalizedIndex % 10],
+    branch: ZHI[normalizedIndex % 12]
+  };
+}
+
+// 대운 계산 함수
+function calculateDaeun(
+  birthYear: number,
+  birthMonth: number,
+  birthDay: number,
+  gender: 'male' | 'female',
+  monthStem: string,
+  monthBranch: string,
+  yearStem: string
+): { daeun: DaeunEntry[]; startAge: number } {
+  // 양남음녀는 순행, 음남양녀는 역행
+  const yearStemIdx = GAN.indexOf(yearStem);
+  const isYangYear = yearStemIdx % 2 === 0; // 갑병무경임 = 양
+  const isMale = gender === 'male';
+  const isForward = (isYangYear && isMale) || (!isYangYear && !isMale);
+  
+  // 월주의 60갑자 인덱스
+  const monthGanZhiIdx = getGanZhiIndex(monthStem, monthBranch);
+  
+  // 대운 시작 나이 계산 (간략화: 출생월 기준)
+  // 실제로는 절기까지의 일수로 계산하지만, 여기서는 간략화
+  // 출생월에 따라 대략적으로 계산 (생일이 해당 월 중순 기준)
+  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  let daysToJeolgi = Math.round(daysInMonth[birthMonth - 1] / 2 - birthDay + 15);
+  if (daysToJeolgi < 0) daysToJeolgi = Math.abs(daysToJeolgi);
+  
+  // 3일 = 1년으로 환산
+  const startAge = Math.round((daysToJeolgi / 3) * 10) / 10;
+  
+  const daeunList: DaeunEntry[] = [];
+  
+  // 대운 13개 (0세~130세 커버)
+  for (let i = 0; i < 13; i++) {
+    const ganZhiIdx = isForward 
+      ? monthGanZhiIdx + i + 1 
+      : monthGanZhiIdx - i - 1;
+    
+    const { stem, branch } = getGanZhiFromIndex(ganZhiIdx);
+    
+    const ageStart = i === 0 ? startAge : Math.floor(startAge) + (i * 10);
+    const ageEnd = Math.floor(startAge) + ((i + 1) * 10) - 1;
+    
+    daeunList.push({
+      startAge: ageStart,
+      endAge: ageEnd,
+      stem,
+      branch,
+      stemKorean: getKoreanChar(stem),
+      branchKorean: getKoreanChar(branch),
+      startYear: birthYear + Math.floor(ageStart)
+    });
+  }
+  
+  return { daeun: daeunList, startAge };
+}
+
+// 세운 (연운) 계산 함수
+function calculateSaeun(birthYear: number): SaeunEntry[] {
+  const saeunList: SaeunEntry[] = [];
+  
+  // 1년부터 110세까지
+  for (let age = 1; age <= 110; age++) {
+    const currentYear = birthYear + age - 1; // 한국 나이 기준
+    
+    // 해당 연도의 천간/지지 계산
+    // 갑자년 기준: 1984년이 갑자년
+    const yearOffset = currentYear - 1984;
+    const ganZhiIdx = ((yearOffset % 60) + 60) % 60;
+    
+    const stem = GAN[ganZhiIdx % 10];
+    const branch = ZHI[ganZhiIdx % 12];
+    
+    saeunList.push({
+      year: currentYear,
+      age,
+      stem,
+      branch,
+      stemKorean: getKoreanChar(stem),
+      branchKorean: getKoreanChar(branch)
+    });
+  }
+  
+  return saeunList;
+}
+
+// 월운 계산 함수 (60갑자 전체)
+function calculateWolun(birthYear: number): WolunEntry[] {
+  const wolunList: WolunEntry[] = [];
+  
+  // 60갑자 = 5년치 (12개월 * 5년 = 60)
+  // 여기서는 출생년도부터 60년치 월운 계산
+  for (let yearOffset = 0; yearOffset < 60; yearOffset++) {
+    const currentYear = birthYear + yearOffset;
+    
+    for (let monthNum = 1; monthNum <= 12; monthNum++) {
+      // 월의 천간 계산: 연간에 따라 결정
+      // 갑기년: 병인월(1월), 을경년: 무인월, 병신년: 경인월, 정임년: 임인월, 무계년: 갑인월
+      const yearGanZhiIdx = ((currentYear - 1984) % 60 + 60) % 60;
+      const yearGan = GAN[yearGanZhiIdx % 10];
+      const yearGanIdx = GAN.indexOf(yearGan);
+      
+      // 인월(1월)의 천간 결정 규칙
+      // 갑기년 -> 병인월, 을경년 -> 무인월, 병신년 -> 경인월, 정임년 -> 임인월, 무계년 -> 갑인월
+      const monthStemStartIdx = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0][yearGanIdx]; // 인월 천간
+      
+      // 월의 천간: 인월부터 시작해서 순행
+      const monthStemIdx = (monthStemStartIdx + monthNum - 1) % 10;
+      const monthStem = GAN[monthStemIdx];
+      
+      // 월의 지지: 1월=인, 2월=묘, ... 12월=축
+      const monthBranchIdx = (monthNum + 1) % 12; // 1월=인(2), 2월=묘(3)...
+      const monthBranch = ZHI[monthBranchIdx];
+      
+      wolunList.push({
+        year: currentYear,
+        month: monthNum,
+        stem: monthStem,
+        branch: monthBranch,
+        stemKorean: getKoreanChar(monthStem),
+        branchKorean: getKoreanChar(monthBranch)
+      });
+    }
+  }
+  
+  return wolunList;
 }
 
 // ---------------------------------------------------------------------------
@@ -276,6 +427,11 @@ export const analyzeSaju = async (input: UserInput): Promise<SajuAnalysisResult>
     
     const aiResult = JSON.parse(response.text);
 
+    // 대운, 세운, 월운 계산
+    const { daeun, startAge } = calculateDaeun(year, month, day, input.gender, monthStem, monthBranch, yearStem);
+    const saeun = calculateSaeun(year);
+    const wolun = calculateWolun(year);
+
     return {
       yearPillar,
       monthPillar,
@@ -287,7 +443,13 @@ export const analyzeSaju = async (input: UserInput): Promise<SajuAnalysisResult>
       chaeumAdvice: aiResult.chaeumAdvice,
       healthAnalysis: aiResult.healthAnalysis,
       fortune2026: aiResult.fortune2026,
-      luckyTable: aiResult.luckyTable
+      luckyTable: aiResult.luckyTable,
+      daeun,
+      saeun,
+      wolun,
+      birthYear: year,
+      birthMonth: month,
+      daeunStartAge: startAge
     };
 
   } catch (error) {

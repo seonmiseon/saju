@@ -147,6 +147,14 @@ const App: React.FC = () => {
 ────────────────────────────────────────
 ${missingText}
 
+📈 대운 (大運) - 10년 주기
+────────────────────────────────────────
+${sajuResult.daeun.slice(0, 10).map(d => `${Math.floor(d.startAge)}~${d.endAge}세: ${d.stem}${d.branch}(${d.stemKorean}${d.branchKorean}) [${d.startYear}년~]`).join('\n')}
+
+📅 세운 (歲運) - 최근 10년
+────────────────────────────────────────
+${sajuResult.saeun.filter(s => s.year >= new Date().getFullYear() - 2 && s.year <= new Date().getFullYear() + 7).map(s => `${s.year}년(${s.age}세): ${s.stem}${s.branch}(${s.stemKorean}${s.branchKorean})`).join(' | ')}
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                     1. 타고난 기질 (일간 분석)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -498,6 +506,119 @@ ${sajuResult.fortune2026.health}
                 <span className="text-yellow-800">토(Earth) <strong className="text-lg">{sajuResult.elementCounts.Earth}</strong></span>
                 <span className="text-gray-700">금(Metal) <strong className="text-lg">{sajuResult.elementCounts.Metal}</strong></span>
                 <span className="text-blue-900">수(Water) <strong className="text-lg">{sajuResult.elementCounts.Water}</strong></span>
+              </div>
+            </section>
+
+            {/* 대운 (10년 운) */}
+            <section className="mt-8">
+              <h3 className="text-xl font-serif font-bold mb-4 flex items-center">
+                <span className="w-1 h-6 bg-purple-600 mr-2"></span>
+                대운 (大運) - 10년 주기 운세
+              </h3>
+              <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
+                <div className="min-w-max p-4">
+                  <div className="flex space-x-1">
+                    {sajuResult.daeun.map((d, idx) => {
+                      const currentYear = new Date().getFullYear();
+                      const currentAge = currentYear - sajuResult.birthYear + 1;
+                      const isCurrentDaeun = currentAge >= d.startAge && currentAge <= d.endAge;
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`flex flex-col items-center min-w-[60px] p-2 rounded-lg ${
+                            isCurrentDaeun ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50'
+                          }`}
+                        >
+                          <span className="text-xs text-gray-500">{Math.floor(d.startAge)}~{d.endAge}세</span>
+                          <span className="text-lg font-bold text-red-700">{d.stem}</span>
+                          <span className="text-lg font-bold text-blue-700">{d.branch}</span>
+                          <span className="text-xs text-gray-400">{d.stemKorean}{d.branchKorean}</span>
+                          <span className="text-xs text-gray-400">{d.startYear}년~</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 세운 (연운/해운) */}
+            <section className="mt-8">
+              <h3 className="text-xl font-serif font-bold mb-4 flex items-center">
+                <span className="w-1 h-6 bg-green-600 mr-2"></span>
+                세운 (歲運) - 연도별 운세
+              </h3>
+              <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
+                <div className="min-w-max p-4">
+                  <div className="flex flex-wrap gap-1">
+                    {sajuResult.saeun.slice(0, 80).map((s, idx) => {
+                      const currentYear = new Date().getFullYear();
+                      const isCurrentYear = s.year === currentYear;
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`flex flex-col items-center min-w-[45px] p-1.5 rounded ${
+                            isCurrentYear ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50'
+                          }`}
+                        >
+                          <span className="text-[10px] text-gray-400">{s.year}</span>
+                          <span className="text-sm font-bold text-red-700">{s.stem}</span>
+                          <span className="text-sm font-bold text-blue-700">{s.branch}</span>
+                          <span className="text-[10px] text-gray-400">{s.age}세</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2 text-right">* 1세~80세 표시 (스크롤하여 더 보기)</p>
+                </div>
+              </div>
+            </section>
+
+            {/* 월운 */}
+            <section className="mt-8">
+              <h3 className="text-xl font-serif font-bold mb-4 flex items-center">
+                <span className="w-1 h-6 bg-blue-600 mr-2"></span>
+                월운 (月運) - 월별 운세 (60갑자)
+              </h3>
+              <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
+                <div className="min-w-max p-4">
+                  {/* 현재 연도 기준 5년치만 기본 표시 */}
+                  {(() => {
+                    const currentYear = new Date().getFullYear();
+                    const currentMonth = new Date().getMonth() + 1;
+                    const displayYears = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2, currentYear + 3];
+                    
+                    return displayYears.map(displayYear => {
+                      const yearWolun = sajuResult.wolun.filter(w => w.year === displayYear);
+                      if (yearWolun.length === 0) return null;
+                      
+                      return (
+                        <div key={displayYear} className="mb-4">
+                          <div className="text-sm font-bold text-gray-700 mb-2">{displayYear}년</div>
+                          <div className="flex space-x-1">
+                            {yearWolun.map((w, idx) => {
+                              const isCurrentMonth = w.year === currentYear && w.month === currentMonth;
+                              return (
+                                <div 
+                                  key={idx}
+                                  className={`flex flex-col items-center min-w-[40px] p-1 rounded ${
+                                    isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50'
+                                  }`}
+                                >
+                                  <span className="text-[10px] text-gray-400">{w.month}월</span>
+                                  <span className="text-sm font-bold text-red-700">{w.stem}</span>
+                                  <span className="text-sm font-bold text-blue-700">{w.branch}</span>
+                                  <span className="text-[9px] text-gray-400">{w.stemKorean}{w.branchKorean}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                  <p className="text-xs text-gray-400 mt-2">* 현재 연도 기준 ±2년 표시</p>
+                </div>
               </div>
             </section>
 

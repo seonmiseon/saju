@@ -16,6 +16,37 @@ export interface Pillar {
   color: string;
 }
 
+// 대운 (10년 운)
+export interface DaeunEntry {
+  startAge: number;
+  endAge: number;
+  stem: string;
+  branch: string;
+  stemKorean: string;
+  branchKorean: string;
+  startYear: number;
+}
+
+// 세운 (연운/해운)
+export interface SaeunEntry {
+  year: number;
+  age: number;
+  stem: string;
+  branch: string;
+  stemKorean: string;
+  branchKorean: string;
+}
+
+// 월운
+export interface WolunEntry {
+  year: number;
+  month: number;
+  stem: string;
+  branch: string;
+  stemKorean: string;
+  branchKorean: string;
+}
+
 export interface LuckyDay {
   date: string; // Combined Month and Day e.g., "3월 15일 (갑자일)"
   time: string;
@@ -59,6 +90,13 @@ export interface SajuAnalysisResult {
     love: string;
   };
   luckyTable: LuckyDay[];
+  // 대운, 세운, 월운
+  daeun: DaeunEntry[];
+  saeun: SaeunEntry[];
+  wolun: WolunEntry[];
+  birthYear: number;
+  birthMonth: number;
+  daeunStartAge: number; // 대운 시작 나이 (소수점)
 }
 
 export interface ChatMessage {
