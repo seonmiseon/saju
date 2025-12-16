@@ -142,36 +142,50 @@ function calculateDaeun(
   yearStem: string
 ): { daeun: DaeunEntry[]; startAge: number } {
   // 양남음녀는 순행, 음남양녀는 역행
+  // 양간: 갑(0), 병(2), 무(4), 경(6), 임(8)
+  // 음간: 을(1), 정(3), 기(5), 신(7), 계(9)
   const yearStemIdx = GAN.indexOf(yearStem);
   const isYangYear = yearStemIdx % 2 === 0; // 갑병무경임 = 양
   const isMale = gender === 'male';
+  // 양남순행, 음남역행, 양여역행, 음여순행
   const isForward = (isYangYear && isMale) || (!isYangYear && !isMale);
   
-  // 월주의 60갑자 인덱스
-  const monthGanZhiIdx = getGanZhiIndex(monthStem, monthBranch);
+  // 월주의 천간/지지 인덱스
+  const monthStemIdx = GAN.indexOf(monthStem);
+  const monthBranchIdx = ZHI.indexOf(monthBranch);
   
-  // 대운 시작 나이 계산 (간략화: 출생월 기준)
-  // 실제로는 절기까지의 일수로 계산하지만, 여기서는 간략화
-  // 출생월에 따라 대략적으로 계산 (생일이 해당 월 중순 기준)
-  const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  let daysToJeolgi = Math.round(daysInMonth[birthMonth - 1] / 2 - birthDay + 15);
-  if (daysToJeolgi < 0) daysToJeolgi = Math.abs(daysToJeolgi);
+  // 대운 시작 나이 계산 (간략화)
+  // 염아성 예시: 6월생이면 약 0.6세부터 대운 시작
+  // 실제로는 절기까지 일수/3으로 계산
+  let startAge = 1;
+  if (birthMonth <= 3) startAge = 7 - birthMonth * 2;
+  else if (birthMonth <= 6) startAge = Math.round((birthMonth - 3) * 0.3 * 10) / 10;
+  else if (birthMonth <= 9) startAge = Math.round((birthMonth - 6) * 0.8 * 10) / 10;
+  else startAge = Math.round((12 - birthMonth) * 0.5 * 10) / 10;
   
-  // 3일 = 1년으로 환산
-  const startAge = Math.round((daysToJeolgi / 3) * 10) / 10;
+  // 6월생 기준 약 0.6 ~ 1
+  if (birthMonth === 6) startAge = 0.6;
   
   const daeunList: DaeunEntry[] = [];
   
-  // 대운 13개 (0세~130세 커버)
+  // 대운 13개 (0세~130세 커버) - 오른쪽에서 왼쪽으로 나이 증가
   for (let i = 0; i < 13; i++) {
-    const ganZhiIdx = isForward 
-      ? monthGanZhiIdx + i + 1 
-      : monthGanZhiIdx - i - 1;
+    // 순행이면 월주 다음 간지, 역행이면 월주 이전 간지
+    let newStemIdx, newBranchIdx;
     
-    const { stem, branch } = getGanZhiFromIndex(ganZhiIdx);
+    if (isForward) {
+      newStemIdx = (monthStemIdx + i + 1) % 10;
+      newBranchIdx = (monthBranchIdx + i + 1) % 12;
+    } else {
+      newStemIdx = ((monthStemIdx - i - 1) % 10 + 10) % 10;
+      newBranchIdx = ((monthBranchIdx - i - 1) % 12 + 12) % 12;
+    }
+    
+    const stem = GAN[newStemIdx];
+    const branch = ZHI[newBranchIdx];
     
     const ageStart = i === 0 ? startAge : Math.floor(startAge) + (i * 10);
-    const ageEnd = Math.floor(startAge) + ((i + 1) * 10) - 1;
+    const ageEnd = Math.floor(startAge) + ((i + 1) * 10);
     
     daeunList.push({
       startAge: ageStart,
@@ -187,16 +201,16 @@ function calculateDaeun(
   return { daeun: daeunList, startAge };
 }
 
-// 세운 (연운) 계산 함수
+// 세운 (연운) 계산 함수 - 태어난 해부터 시작
 function calculateSaeun(birthYear: number): SaeunEntry[] {
   const saeunList: SaeunEntry[] = [];
   
-  // 1년부터 110세까지
+  // 태어난 해(1세)부터 110세까지
   for (let age = 1; age <= 110; age++) {
     const currentYear = birthYear + age - 1; // 한국 나이 기준
     
     // 해당 연도의 천간/지지 계산
-    // 갑자년 기준: 1984년이 갑자년
+    // 1984년이 갑자년 기준
     const yearOffset = currentYear - 1984;
     const ganZhiIdx = ((yearOffset % 60) + 60) % 60;
     
@@ -216,18 +230,20 @@ function calculateSaeun(birthYear: number): SaeunEntry[] {
   return saeunList;
 }
 
-// 월운 계산 함수 (60갑자 전체)
+// 월운 계산 함수
 function calculateWolun(birthYear: number): WolunEntry[] {
   const wolunList: WolunEntry[] = [];
   
-  // 60갑자 = 5년치 (12개월 * 5년 = 60)
-  // 여기서는 출생년도부터 60년치 월운 계산
+  // 출생년도부터 60년치 월운 계산
   for (let yearOffset = 0; yearOffset < 60; yearOffset++) {
     const currentYear = birthYear + yearOffset;
     
     for (let monthNum = 1; monthNum <= 12; monthNum++) {
-      // 월의 천간 계산: 연간에 따라 결정
-      // 갑기년: 병인월(1월), 을경년: 무인월, 병신년: 경인월, 정임년: 임인월, 무계년: 갑인월
+      // 연간에 따른 인월(1월) 천간 결정
+      // 갑기년: 병인월, 을경년: 무인월, 병신년: 경인월, 정임년: 임인월, 무계년: 갑인월
+      const yearGanZhiIdx = ((currentYear - 1984) % 60 + 60) % 60;
+      const yearGan = GAN[yearGanZhiIdx % 10];
+      const yearGanIdx = GAN.indexOf(yearGan);
       const yearGanZhiIdx = ((currentYear - 1984) % 60 + 60) % 60;
       const yearGan = GAN[yearGanZhiIdx % 10];
       const yearGanIdx = GAN.indexOf(yearGan);
