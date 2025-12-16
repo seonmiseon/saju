@@ -517,8 +517,8 @@ ${sajuResult.fortune2026.health}
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
-                  {/* 오른쪽에서 왼쪽으로: 어린 나이가 오른쪽, 나이 많아질수록 왼쪽 */}
-                  <div className="flex flex-row-reverse space-x-reverse space-x-1">
+                  {/* 왼쪽이 어린 나이, 오른쪽이 나이 많음 */}
+                  <div className="flex space-x-1">
                     {sajuResult.daeun.map((d, idx) => {
                       const currentYear = new Date().getFullYear();
                       const currentAge = currentYear - sajuResult.birthYear + 1;
@@ -526,15 +526,15 @@ ${sajuResult.fortune2026.health}
                       return (
                         <div 
                           key={idx} 
-                          className={`flex flex-col items-center min-w-[60px] p-2 rounded-lg ${
-                            isCurrentDaeun ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50'
+                          className={`flex flex-col items-center min-w-[70px] p-2 rounded-lg border ${
+                            isCurrentDaeun ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
                           }`}
                         >
-                          <span className="text-xs text-gray-500">{Math.floor(d.startAge)}</span>
-                          <span className="text-lg font-bold text-red-700">{d.stem}</span>
-                          <span className="text-lg font-bold text-blue-700">{d.branch}</span>
-                          <span className="text-xs text-gray-400">{d.stemKorean}{d.branchKorean}</span>
-                          <span className="text-xs text-gray-400">{d.startYear}</span>
+                          <span className="text-xs text-gray-500">{Math.floor(d.startAge)}~{d.endAge}세</span>
+                          <span className="text-xl font-bold text-red-600">{d.stem}</span>
+                          <span className="text-xl font-bold text-blue-600">{d.branch}</span>
+                          <span className="text-xs text-gray-500">{d.stemKorean}{d.branchKorean}</span>
+                          <span className="text-xs text-gray-400">{d.startYear}년~</span>
                         </div>
                       );
                     })}
@@ -551,21 +551,21 @@ ${sajuResult.fortune2026.health}
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
-                  {/* 오른쪽에서 왼쪽으로: 태어난 해가 오른쪽 */}
-                  <div className="flex flex-row-reverse flex-wrap-reverse gap-1">
+                  {/* 왼쪽이 태어난 해, 오른쪽이 나중 */}
+                  <div className="flex flex-wrap gap-1">
                     {sajuResult.saeun.slice(0, 80).map((s, idx) => {
                       const currentYear = new Date().getFullYear();
                       const isCurrentYear = s.year === currentYear;
                       return (
                         <div 
                           key={idx} 
-                          className={`flex flex-col items-center min-w-[45px] p-1.5 rounded ${
-                            isCurrentYear ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50'
+                          className={`flex flex-col items-center min-w-[50px] p-1.5 rounded border ${
+                            isCurrentYear ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
                           }`}
                         >
                           <span className="text-[10px] text-gray-400">{s.year}</span>
-                          <span className="text-sm font-bold text-red-700">{s.stem}</span>
-                          <span className="text-sm font-bold text-blue-700">{s.branch}</span>
+                          <span className="text-base font-bold text-red-600">{s.stem}</span>
+                          <span className="text-base font-bold text-blue-600">{s.branch}</span>
                           <span className="text-[10px] text-gray-500">{s.stemKorean}{s.branchKorean}</span>
                           <span className="text-[10px] text-gray-400">{s.age}세</span>
                         </div>
@@ -598,21 +598,21 @@ ${sajuResult.fortune2026.health}
                       return (
                         <div key={displayYear} className="mb-4">
                           <div className="text-sm font-bold text-gray-700 mb-2">{displayYear}년</div>
-                          {/* 오른쪽에서 왼쪽: 1월이 오른쪽, 12월이 왼쪽 */}
-                          <div className="flex flex-row-reverse space-x-reverse space-x-1">
+                          {/* 1월이 왼쪽, 12월이 오른쪽 */}
+                          <div className="flex space-x-1">
                             {yearWolun.map((w, idx) => {
                               const isCurrentMonth = w.year === currentYear && w.month === currentMonth;
                               return (
                                 <div 
                                   key={idx}
-                                  className={`flex flex-col items-center min-w-[40px] p-1 rounded ${
-                                    isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50'
+                                  className={`flex flex-col items-center min-w-[45px] p-1 rounded border ${
+                                    isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
                                   }`}
                                 >
                                   <span className="text-[10px] text-gray-400">{w.month}월</span>
-                                  <span className="text-sm font-bold text-red-700">{w.stem}</span>
-                                  <span className="text-sm font-bold text-blue-700">{w.branch}</span>
-                                  <span className="text-[9px] text-gray-400">{w.stemKorean}{w.branchKorean}</span>
+                                  <span className="text-base font-bold text-red-600">{w.stem}</span>
+                                  <span className="text-base font-bold text-blue-600">{w.branch}</span>
+                                  <span className="text-[9px] text-gray-500">{w.stemKorean}{w.branchKorean}</span>
                                 </div>
                               );
                             })}
@@ -621,7 +621,6 @@ ${sajuResult.fortune2026.health}
                       );
                     });
                   })()}
-                  <p className="text-xs text-gray-400 mt-2">* 현재 연도 기준 ±2년 표시 (오른쪽→왼쪽으로 시간 흐름)</p>
                 </div>
               </div>
             </section>
