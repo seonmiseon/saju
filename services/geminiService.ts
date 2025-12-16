@@ -231,33 +231,38 @@ function calculateSaeun(birthYear: number): SaeunEntry[] {
 }
 
 // 월운 계산 함수
+// 월건 기준: 1월=인월, 2월=묘월, ... 11월=자월, 12월=축월
+// 연간에 따른 인월 천간 (년상기월법):
+// 갑기년 -> 병인월(丙寅), 을경년 -> 무인월(戊寅), 병신년 -> 경인월(庚寅), 정임년 -> 임인월(壬寅), 무계년 -> 갑인월(甲寅)
 function calculateWolun(birthYear: number): WolunEntry[] {
   const wolunList: WolunEntry[] = [];
   
-  // 출생년도부터 60년치 월운 계산
-  for (let yearOffset = 0; yearOffset < 60; yearOffset++) {
-    const currentYear = birthYear + yearOffset;
-    
+  // 현재년도 기준 앞뒤 여유있게 계산 (출생년도-10 ~ 출생년도+70)
+  const startYear = birthYear - 10;
+  const endYear = birthYear + 70;
+  
+  for (let currentYear = startYear; currentYear <= endYear; currentYear++) {
     for (let monthNum = 1; monthNum <= 12; monthNum++) {
-      // 연간에 따른 인월(1월) 천간 결정
-      // 갑기년: 병인월, 을경년: 무인월, 병신년: 경인월, 정임년: 임인월, 무계년: 갑인월
-      const yearGanZhiIdx = ((currentYear - 1984) % 60 + 60) % 60;
-      const yearGan = GAN[yearGanZhiIdx % 10];
-      const yearGanIdx = GAN.indexOf(yearGan);
+      // 해당 연도의 천간 구하기
+      // 1984년 = 갑자년 기준
       const yearGanZhiIdx = ((currentYear - 1984) % 60 + 60) % 60;
       const yearGan = GAN[yearGanZhiIdx % 10];
       const yearGanIdx = GAN.indexOf(yearGan);
       
-      // 인월(1월)의 천간 결정 규칙
-      // 갑기년 -> 병인월, 을경년 -> 무인월, 병신년 -> 경인월, 정임년 -> 임인월, 무계년 -> 갑인월
-      const monthStemStartIdx = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0][yearGanIdx]; // 인월 천간
+      // 년상기월법 (年上起月法)
+      // 갑기년(0,5) -> 병(2)인월, 을경년(1,6) -> 무(4)인월, 병신년(2,7) -> 경(6)인월
+      // 정임년(3,8) -> 임(8)인월, 무계년(4,9) -> 갑(0)인월
+      const inMonthStemTable = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0]; // 갑을병정무기경신임계 -> 인월천간
+      const inMonthStemIdx = inMonthStemTable[yearGanIdx];
       
-      // 월의 천간: 인월부터 시작해서 순행
-      const monthStemIdx = (monthStemStartIdx + monthNum - 1) % 10;
+      // 월의 천간: 인월(1월)부터 순행
+      const monthStemIdx = (inMonthStemIdx + monthNum - 1) % 10;
       const monthStem = GAN[monthStemIdx];
       
-      // 월의 지지: 1월=인, 2월=묘, ... 12월=축
-      const monthBranchIdx = (monthNum + 1) % 12; // 1월=인(2), 2월=묘(3)...
+      // 월의 지지: 1월=寅(2), 2월=卯(3), ... 11월=子(0), 12월=丑(1)
+      // ZHI 배열: ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+      // 1월=寅 -> index 2, 2월=卯 -> index 3, ...
+      const monthBranchIdx = (monthNum + 1) % 12; // 1월 -> (1+1)%12=2=寅
       const monthBranch = ZHI[monthBranchIdx];
       
       wolunList.push({
