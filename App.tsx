@@ -551,9 +551,9 @@ ${sajuResult.fortune2026.health}
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
-                  {/* 왼쪽이 태어난 해, 오른쪽이 나중 */}
+                  {/* 왼쪽이 태어난 해, 오른쪽이 나중 - 100세까지 */}
                   <div className="flex flex-wrap gap-1">
-                    {sajuResult.saeun.slice(0, 80).map((s, idx) => {
+                    {sajuResult.saeun.slice(0, 100).map((s, idx) => {
                       const currentYear = new Date().getFullYear();
                       const isCurrentYear = s.year === currentYear;
                       return (
@@ -572,7 +572,7 @@ ${sajuResult.fortune2026.health}
                       );
                     })}
                   </div>
-                  <p className="text-xs text-gray-400 mt-2 text-right">* 1세~80세 표시 (스크롤하여 더 보기)</p>
+                  <p className="text-xs text-gray-400 mt-2 text-right">* 1세~100세 표시</p>
                 </div>
               </div>
             </section>
@@ -581,41 +581,84 @@ ${sajuResult.fortune2026.health}
             <section className="mt-8">
               <h3 className="text-xl font-serif font-bold mb-4 flex items-center">
                 <span className="w-1 h-6 bg-blue-600 mr-2"></span>
-                월운 (月運) <span className="text-sm font-normal text-gray-500 ml-2">달의 운, 월별 운세</span>
+                월운 (月運) <span className="text-sm font-normal text-gray-500 ml-2">달의 운, 월별 운세 (60갑자)</span>
               </h3>
               <div className="bg-white rounded-xl paper-shadow overflow-x-auto">
                 <div className="min-w-max p-4">
-                  {/* 현재 연도의 월운만 표시 - 오른쪽이 1월, 왼쪽이 12월 */}
+                  {/* 60갑자 월운: 2년씩 한 줄에 표시, 오른쪽이 1월 */}
                   {(() => {
                     const currentYear = new Date().getFullYear();
                     const currentMonth = new Date().getMonth() + 1;
-                    const yearWolun = sajuResult.wolun.filter(w => w.year === currentYear);
+                    const birthYear = sajuResult.birthYear;
                     
-                    // 12월부터 1월 순서로 (오른쪽→왼쪽 시간 흐름)
-                    const reversedWolun = [...yearWolun].reverse();
+                    // 5년치 = 60갑자 (12월 x 5)
+                    // 2년씩 한 줄로 표시
+                    const rows = [];
+                    for (let i = 0; i < 5; i += 2) {
+                      const year1 = birthYear + i;
+                      const year2 = birthYear + i + 1;
+                      const year1Wolun = sajuResult.wolun.filter(w => w.year === year1);
+                      const year2Wolun = sajuResult.wolun.filter(w => w.year === year2);
+                      
+                      // 두 년치를 합쳐서 역순으로 (12월→1월, 12월→1월)
+                      const combined = [...[...year2Wolun].reverse(), ...[...year1Wolun].reverse()];
+                      
+                      rows.push(
+                        <div key={i} className="mb-3">
+                          <div className="text-xs text-gray-500 mb-1">{year2}년 ({year2 - birthYear + 1}세) ~ {year1}년 ({year1 - birthYear + 1}세) 월운</div>
+                          <div className="flex space-x-0.5">
+                            {combined.map((w, idx) => {
+                              const isCurrentMonth = w.year === currentYear && w.month === currentMonth;
+                              return (
+                                <div 
+                                  key={idx}
+                                  className={`flex flex-col items-center min-w-[38px] p-1 rounded border ${
+                                    isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
+                                  }`}
+                                >
+                                  <span className="text-sm font-bold text-red-600">{w.stem}</span>
+                                  <span className="text-sm font-bold text-blue-600">{w.branch}</span>
+                                  <span className="text-[9px] text-gray-500">{w.stemKorean}{w.branchKorean}</span>
+                                  <span className="text-[9px] text-gray-400">{w.month}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    // 현재 연도 기준 월운도 추가
+                    const currentYearWolun = sajuResult.wolun.filter(w => w.year === currentYear);
+                    const nextYearWolun = sajuResult.wolun.filter(w => w.year === currentYear + 1);
+                    const currentCombined = [...[...nextYearWolun].reverse(), ...[...currentYearWolun].reverse()];
                     
                     return (
-                      <div>
-                        <div className="text-sm font-bold text-gray-700 mb-2">{currentYear}년 ({currentYear - sajuResult.birthYear + 1}세) 월운</div>
-                        <div className="flex space-x-1">
-                          {reversedWolun.map((w, idx) => {
-                            const isCurrentMonth = w.month === currentMonth;
-                            return (
-                              <div 
-                                key={idx}
-                                className={`flex flex-col items-center min-w-[45px] p-1.5 rounded border ${
-                                  isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
-                                }`}
-                              >
-                                <span className="text-base font-bold text-red-600">{w.stem}</span>
-                                <span className="text-base font-bold text-blue-600">{w.branch}</span>
-                                <span className="text-[10px] text-gray-500">{w.stemKorean}{w.branchKorean}</span>
-                                <span className="text-[10px] text-gray-400">{w.month}</span>
-                              </div>
-                            );
-                          })}
+                      <>
+                        <div className="mb-4 pb-4 border-b border-gray-200">
+                          <div className="text-sm font-bold text-gray-700 mb-1">현재: {currentYear + 1}년 ({currentYear + 1 - birthYear + 1}세) ~ {currentYear}년 ({currentYear - birthYear + 1}세) 월운</div>
+                          <div className="flex space-x-0.5">
+                            {currentCombined.map((w, idx) => {
+                              const isCurrentMonth = w.year === currentYear && w.month === currentMonth;
+                              return (
+                                <div 
+                                  key={idx}
+                                  className={`flex flex-col items-center min-w-[38px] p-1 rounded border ${
+                                    isCurrentMonth ? 'bg-orange-100 border-2 border-orange-400' : 'bg-gray-50 border-gray-200'
+                                  }`}
+                                >
+                                  <span className="text-sm font-bold text-red-600">{w.stem}</span>
+                                  <span className="text-sm font-bold text-blue-600">{w.branch}</span>
+                                  <span className="text-[9px] text-gray-500">{w.stemKorean}{w.branchKorean}</span>
+                                  <span className="text-[9px] text-gray-400">{w.month}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
+                        <div className="text-xs text-gray-500 mb-2">60갑자 월운 (출생년도 기준)</div>
+                        {rows}
+                      </>
                     );
                   })()}
                 </div>
