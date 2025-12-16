@@ -3,6 +3,8 @@ import { UserInput, SajuAnalysisResult, ChatMessage } from './types';
 import { analyzeSaju, consultSaju, setApiKey, getStoredApiKey, isApiKeySet } from './services/geminiService';
 import PillarCard from './components/PillarCard';
 import LoadingSpinner from './components/LoadingSpinner';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const App: React.FC = () => {
   // State
@@ -34,6 +36,12 @@ const App: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // PDF Export State
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfContent, setPdfContent] = useState('');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const pdfContentRef = useRef<HTMLDivElement>(null);
 
   // Handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -105,6 +113,212 @@ const App: React.FC = () => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
+
+  // PDF 내용 생성 함수
+  const generatePdfContent = () => {
+    if (!sajuResult || !input.name) return '';
+    
+    const missingText = sajuResult.missingElements.map(m => `${m.priority}순위: ${m.element}`).join(', ');
+    
+    let content = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            🔮 천기누설 (天機漏洩) 사주 분석서 🔮
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 기본 정보
+────────────────────────────────────────
+• 성명: ${input.name}
+• 성별: ${input.gender === 'male' ? '남성' : '여성'}
+• 생년월일: ${input.birthDate}
+• 출생시각: ${input.birthTime}
+
+📊 사주 원국 (四柱 原局)
+────────────────────────────────────────
+• 년주 (年柱): ${sajuResult.yearPillar.stem}${sajuResult.yearPillar.branch} (${sajuResult.yearPillar.stemKorean}${sajuResult.yearPillar.branchKorean})
+• 월주 (月柱): ${sajuResult.monthPillar.stem}${sajuResult.monthPillar.branch} (${sajuResult.monthPillar.stemKorean}${sajuResult.monthPillar.branchKorean})
+• 일주 (日柱): ${sajuResult.dayPillar.stem}${sajuResult.dayPillar.branch} (${sajuResult.dayPillar.stemKorean}${sajuResult.dayPillar.branchKorean})
+• 시주 (時柱): ${sajuResult.hourPillar.stem}${sajuResult.hourPillar.branch} (${sajuResult.hourPillar.stemKorean}${sajuResult.hourPillar.branchKorean})
+
+🌿 오행 분포
+────────────────────────────────────────
+목(木): ${sajuResult.elementCounts.Wood}개 | 화(火): ${sajuResult.elementCounts.Fire}개 | 토(土): ${sajuResult.elementCounts.Earth}개 | 금(金): ${sajuResult.elementCounts.Metal}개 | 수(水): ${sajuResult.elementCounts.Water}개
+
+⚡ 부족한 기운 (용신/희신)
+────────────────────────────────────────
+${missingText}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    1. 타고난 기질 (일간 분석)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${sajuResult.dayMasterReading}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    2. 채움 비책 (부족한 기운 보충법)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 추천 색상
+${sajuResult.chaeumAdvice.colors}
+
+📍 추천 방위
+${sajuResult.chaeumAdvice.directions}
+
+🍀 행운 숫자
+${sajuResult.chaeumAdvice.numbers}
+
+💼 추천 직업/업종
+${sajuResult.chaeumAdvice.careers}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    3. 건강 분석 (의학 박사의 처방)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ 취약 장기
+${sajuResult.healthAnalysis.weakOrgans}
+
+🩹 예상 증상
+${sajuResult.healthAnalysis.symptoms}
+
+📋 전문의 상세 처방
+${sajuResult.healthAnalysis.medicalAdvice}
+
+🥗 추천 식이요법
+${sajuResult.healthAnalysis.foodRecommendation}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    4. 2026년 (병오년) 대박 운세
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 총운
+${sajuResult.fortune2026.overall}
+
+💰 재물운
+${sajuResult.fortune2026.wealth}
+
+💼 직업/사업운
+${sajuResult.fortune2026.career}
+
+❤️ 애정/가정운
+${sajuResult.fortune2026.love}
+
+💊 건강운
+${sajuResult.fortune2026.health}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    5. 귀인과 길일 (2026년 행운의 시간표)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+`;
+
+    sajuResult.luckyTable.forEach((row, index) => {
+      content += `${index + 1}. ${row.date} | ${row.time} | ${row.direction}\n`;
+    });
+
+    // 채팅 내역 추가
+    if (chatMessages.length > 0) {
+      content += `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                    📝 상담 내역
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+`;
+      chatMessages.forEach(msg => {
+        const speaker = msg.role === 'user' ? `[${input.name}]` : '[천기 도사]';
+        content += `${speaker}\n${msg.text}\n\n────────────────────────────────────────\n\n`;
+      });
+    }
+
+    content += `
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        🙏 천기누설 정통 사주·풍수 감정원 🙏
+              작성일: ${new Date().toLocaleDateString('ko-KR')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`;
+
+    return content;
+  };
+
+  // PDF 모달 열기
+  const openPdfModal = () => {
+    const content = generatePdfContent();
+    setPdfContent(content);
+    setShowPdfModal(true);
+  };
+
+  // PDF 다운로드
+  const downloadPdf = async () => {
+    setIsGeneratingPdf(true);
+    
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const lineHeight = 6;
+      let yPosition = margin;
+      
+      // 폰트 설정 (한글 지원을 위해 기본 폰트 사용)
+      pdf.setFont('helvetica');
+      
+      const lines = pdfContent.split('\n');
+      
+      for (const line of lines) {
+        // 페이지 넘김 체크
+        if (yPosition > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        
+        // 제목 스타일 (━ 포함된 라인)
+        if (line.includes('━━━')) {
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 100, 100);
+        } else if (line.includes('🔮') || line.includes('📋') || line.includes('📊') || line.includes('🌿') || line.includes('⚡')) {
+          pdf.setFontSize(12);
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFont('helvetica', 'bold');
+        } else {
+          pdf.setFontSize(10);
+          pdf.setTextColor(50, 50, 50);
+          pdf.setFont('helvetica', 'normal');
+        }
+        
+        // 긴 텍스트는 여러 줄로 분할
+        const splitLines = pdf.splitTextToSize(line, pageWidth - (margin * 2));
+        
+        for (const splitLine of splitLines) {
+          if (yPosition > pageHeight - margin) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(splitLine, margin, yPosition);
+          yPosition += lineHeight;
+        }
+      }
+      
+      pdf.save(`천기누설_사주분석_${input.name}_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (error) {
+      console.error('PDF 생성 오류:', error);
+      alert('PDF 생성 중 오류가 발생했습니다.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // 텍스트 파일로 다운로드 (한글 완벽 지원)
+  const downloadText = () => {
+    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `천기누설_사주분석_${input.name}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-oriental-paper font-sans text-oriental-black overflow-hidden">
@@ -492,9 +706,94 @@ const App: React.FC = () => {
               </div>
             </section>
 
+            {/* PDF Download Section */}
+            <section className="mt-8 bg-gradient-to-r from-oriental-gold/20 to-oriental-red/20 p-6 rounded-xl border-2 border-oriental-gold/30">
+              <div className="text-center">
+                <h3 className="text-xl font-serif font-bold mb-2">📄 사주 분석서 다운로드</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  위의 모든 분석 결과와 상담 내역을 파일로 저장하세요.<br/>
+                  다운로드 전에 내용을 수정할 수 있습니다.
+                </p>
+                <button
+                  onClick={openPdfModal}
+                  className="bg-oriental-red text-white px-8 py-3 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-lg flex items-center justify-center mx-auto space-x-2"
+                >
+                  <span>📥</span>
+                  <span>분석서 다운로드 (수정 가능)</span>
+                </button>
+              </div>
+            </section>
+
           </div>
         )}
       </main>
+
+      {/* PDF Export Modal */}
+      {showPdfModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-oriental-black text-white p-4 rounded-t-xl flex justify-between items-center">
+              <h3 className="font-serif font-bold flex items-center space-x-2">
+                <span>📄</span>
+                <span>사주 분석서 편집 및 다운로드</span>
+              </h3>
+              <button
+                onClick={() => setShowPdfModal(false)}
+                className="text-white hover:text-gray-300 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            {/* Modal Body - Editable Content */}
+            <div className="flex-1 overflow-hidden p-4">
+              <p className="text-sm text-gray-500 mb-2">
+                💡 아래 내용을 자유롭게 수정한 후 다운로드하세요.
+              </p>
+              <textarea
+                value={pdfContent}
+                onChange={(e) => setPdfContent(e.target.value)}
+                className="w-full h-[50vh] p-4 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-oriental-gold focus:border-transparent outline-none"
+                style={{ lineHeight: '1.6' }}
+              />
+            </div>
+            
+            {/* Modal Footer - Download Buttons */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+              <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <button
+                  onClick={downloadText}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <span>📝</span>
+                  <span>텍스트 파일 (.txt) 다운로드</span>
+                </button>
+                <button
+                  onClick={downloadPdf}
+                  disabled={isGeneratingPdf}
+                  className="bg-oriental-red text-white px-6 py-3 rounded-lg font-bold hover:bg-red-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      <span>PDF 생성 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📄</span>
+                      <span>PDF 파일 (.pdf) 다운로드</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 text-center mt-3">
+                * 한글이 깨지는 경우 텍스트 파일(.txt)을 권장합니다.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
